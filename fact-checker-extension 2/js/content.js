@@ -67,42 +67,62 @@ async function startFactCheck(text) {
 }
 
 // Create fact-check card
+// Create fact-check card
 function createFactCheckCard(text, status = 'loading') {
-    // Remove existing card
-    removeFactCheckCard();
-    
-    // Create card element
-    factCheckCard = document.createElement('div');
-    factCheckCard.className = 'fact-check-card';
-    factCheckCard.innerHTML = `
-        <div class="fact-check-header">
-            <div class="fact-check-title">
-                <span class="fact-check-icon">🔍</span>
-                <span>Fact Checker</span>
-            </div>
-            <button class="fact-check-close" onclick="this.closest('.fact-check-card').remove()">×</button>
-        </div>
-        <div class="fact-check-content">
-            <div class="checked-text">
-                <strong>Checked:</strong> "${text.substring(0, 100)}${text.length > 100 ? '...' : ''}"
-            </div>
-            <div class="fact-check-result">
-                ${status === 'loading' ? getLoadingHTML() : ''}
-            </div>
-        </div>
-    `;
-    
-    // Position card near the selected text
-    positionCard();
-    
-    // Add card to page
-    document.body.appendChild(factCheckCard);
-    
-    // Add click outside to close
-    setTimeout(() => {
-        document.addEventListener('click', handleOutsideClick);
-    }, 100);
+  // Remove existing card
+  removeFactCheckCard();
+
+  // Create card element
+  factCheckCard = document.createElement('div');
+  factCheckCard.className = 'fact-check-card';
+  factCheckCard.innerHTML = `
+    <div class="fact-check-header">
+      <div class="fact-check-title">
+        <span class="fact-check-icon">🔍</span>
+        <span>Fact Checker</span>
+      </div>
+      <!-- removed inline onclick -->
+      <button class="fact-check-close" aria-label="Close">×</button>
+    </div>
+    <div class="fact-check-content">
+      <div class="checked-text">
+        <strong>Checked:</strong> "${text.substring(0, 100)}${text.length > 100 ? '...' : ''}"
+      </div>
+      <div class="fact-check-result">
+        ${status === 'loading' ? getLoadingHTML() : ''}
+      </div>
+    </div>
+  `;
+
+  // Wire the close button to proper cleanup
+  const closeBtn = factCheckCard.querySelector('.fact-check-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      removeFactCheckCard();
+    });
+  }
+
+  // Position card near the selected text
+  positionCard();
+
+  // Add card to page
+  document.body.appendChild(factCheckCard);
+
+  // Add click outside to close (slight delay to avoid immediate close)
+  setTimeout(() => {
+    document.addEventListener('click', handleOutsideClick);
+  }, 100);
+
+  // Add Esc-to-close
+  const escHandler = (e) => {
+    if (e.key === 'Escape') removeFactCheckCard();
+  };
+  document.addEventListener('keydown', escHandler);
+  // stash so we can remove it later in removeFactCheckCard()
+  factCheckCard._escHandler = escHandler;
 }
+
 
 // Get loading HTML
 function getLoadingHTML() {
@@ -166,71 +186,90 @@ function animateLoadingSteps(callback) {
 }
 
 // Show results
+
+// Show results (REPLACE your existing function with this)
 function showResults(result) {
-    const resultContainer = factCheckCard.querySelector('.fact-check-result');
-    
-    const statusIcon = getStatusIcon(result.status);
-    const statusClass = getStatusClass(result.status);
-    
-    resultContainer.innerHTML = `
-        <div class="result-header ${statusClass}">
-            <span class="result-icon">${statusIcon}</span>
-            <div class="result-title">${result.title}</div>
+  const resultContainer = factCheckCard.querySelector('.fact-check-result');
+
+  const statusIcon = getStatusIcon(result.status);
+  const statusClass = getStatusClass(result.status);
+
+  // Compact sources block (hover to reveal)
+  const sourcesHTML = (result.sources && result.sources.length > 0) ? `
+    <div class="sources-compact">
+      <button class="sources-trigger" aria-label="Show sources" title="Show sources">
+        🔗 <span class="sources-count">${result.sources.length}</span>
+      </button>
+      <div class="sources-popover" role="menu">
+        ${result.sources.map(src => `
+          <a class="source-link" href="${src.url}" target="_blank" rel="noopener noreferrer" title="${src.url}">
+            ${src.name || src.url}
+          </a>
+        `).join('')}
+        <div class="sources-actions">
+          <button class="copy-citations">Copy citations</button>
         </div>
-        
-        <div class="result-description">
-            ${result.description}
-        </div>
-        
-        ${result.rating ? `
-            <div class="confidence-level">
-                <strong>Confidence:</strong>
-                <span class="confidence-badge ${getConfidenceClass(result.rating)}">${result.rating}</span>
-            </div>
-        ` : ''}
-        
-        <div class="result-explanation">
-            ${result.explanation}
-        </div>
-        
-        ${result.details ? `
-            <div class="analysis-details">
-                <div class="api-result">
-                    <strong>🔍 Exa Labs:</strong> ${result.details.exa.reasoning}
-                </div>
-                <div class="api-result">
-                    <strong>🤖 Perplexity AI:</strong> ${result.details.perplexity.reasoning}
-                </div>
-            </div>
-        ` : ''}
-        
-        ${result.sources && result.sources.length > 0 ? `
-            <div class="sources-section">
-                <div class="sources-header">Sources:</div>
-                <div class="sources-list">
-                    ${result.sources.map(source => `
-                        <div class="source-item">
-                            <a href="${source.url}" target="_blank" rel="noopener noreferrer">
-                                ${source.name}
-                            </a>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        ` : ''}
-    `;
+      </div>
+    </div>
+  ` : '';
+
+  resultContainer.innerHTML = `
+    <div class="result-header ${statusClass}">
+      <span class="result-icon">${statusIcon}</span>
+      <div class="result-title">${result.title}</div>
+    </div>
+
+    <div class="result-description">${result.description}</div>
+
+    ${result.rating ? `
+      <div class="confidence-level">
+        <strong>Confidence:</strong>
+        <span class="confidence-badge ${getConfidenceClass(result.rating)}">${result.rating}</span>
+      </div>
+    ` : ''}
+
+    <div class="result-explanation">${result.explanation}</div>
+
+    ${result.details ? `
+      <div class="analysis-details">
+        <div class="api-result"><strong>🔍 Exa Labs:</strong> ${result.details.exa.reasoning}</div>
+        <div class="api-result"><strong>🤖 Perplexity AI:</strong> ${result.details.perplexity.reasoning}</div>
+      </div>
+    ` : ''}
+
+    ${sourcesHTML}
+  `;
+
+  // Wire up hover + copy for the compact sources UI
+  const trigger = resultContainer.querySelector('.sources-trigger');
+  const pop = resultContainer.querySelector('.sources-popover');
+  if (trigger && pop) {
+    let hideTimer;
+    const show = () => { clearTimeout(hideTimer); pop.classList.add('open'); };
+    const hide = () => { hideTimer = setTimeout(() => pop.classList.remove('open'), 180); };
+
+    trigger.addEventListener('mouseenter', show);
+    trigger.addEventListener('mouseleave', hide);
+    pop.addEventListener('mouseenter', show);
+    pop.addEventListener('mouseleave', hide);
+
+    const copyBtn = resultContainer.querySelector('.copy-citations');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async () => {
+        const lines = (result.sources || []).map(s => `${s.name || s.url} — ${s.url}`);
+        try {
+          await navigator.clipboard.writeText(lines.join('\n'));
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => (copyBtn.textContent = 'Copy citations'), 1200);
+        } catch {
+          copyBtn.textContent = 'Copy failed';
+          setTimeout(() => (copyBtn.textContent = 'Copy citations'), 1200);
+        }
+      });
+    }
+  }
 }
 
-// Get status icon
-function getStatusIcon(status) {
-    switch (status) {
-        case 'true': return '✅';
-        case 'false': return '❌';
-        case 'uncertain': return '❓';
-        case 'error': return '⚠️';
-        default: return '🔍';
-    }
-}
 
 // Get status class
 function getStatusClass(status) {
@@ -280,10 +319,14 @@ function handleOutsideClick(event) {
 
 // Remove fact-check card
 function removeFactCheckCard() {
-    if (factCheckCard) {
-        factCheckCard.remove();
-        factCheckCard = null;
-        document.removeEventListener('click', handleOutsideClick);
+  if (factCheckCard) {
+    factCheckCard.remove();
+    // remove listeners
+    document.removeEventListener('click', handleOutsideClick);
+    if (factCheckCard._escHandler) {
+      document.removeEventListener('keydown', factCheckCard._escHandler);
     }
+    factCheckCard = null;
+  }
 }
 
