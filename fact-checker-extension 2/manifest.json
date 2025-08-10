@@ -2,14 +2,16 @@
   "manifest_version": 3,
   "name": "LLM Fact Checker",
   "version": "1.0.0",
-  "description": "Fact-check LLM responses using Google's Fact Check Tools API",
+  "description": "Fact-check LLM responses using external sources",
   "permissions": [
     "activeTab",
     "storage",
-    "contextMenus"
+    "contextMenus",
+    "scripting"
   ],
   "host_permissions": [
-    "https://factchecktools.googleapis.com/*"
+    "https://api.exa.ai/*",
+    "https://api.perplexity.ai/*"
   ],
   "background": {
     "service_worker": "js/background.js"
@@ -18,7 +20,9 @@
     {
       "matches": ["<all_urls>"],
       "js": ["js/content.js"],
-      "css": ["css/content.css"]
+      "css": ["css/content.css"],
+      "run_at": "document_idle",
+      "all_frames": true
     }
   ],
   "action": {
@@ -36,12 +40,7 @@
     "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": ["css/fact-check-card.css"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  }
 }
+
 
