@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Fact Checker</title>
+    <link rel="stylesheet" href="css/popup.css">
+</head>
+<body>
+    <div class="popup-container">
+        <div class="header">
+            <h1>LLM Fact Checker</h1>
+            <p class="subtitle">Verify facts using Exa Labs + Perplexity AI</p>
+        </div>
+
+        <div class="settings-section">
+            <div class="input-group">
+                <label for="exaApiKey">Exa Labs API Key:</label>
+                <div class="input-container">
+                    <input type="password" id="exaApiKey" placeholder="Enter your Exa Labs API key">
+                    <button type="button" id="toggleExaKey" class="toggle-btn">👁️</button>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="perplexityApiKey">Perplexity API Key:</label>
+                <div class="input-container">
+                    <input type="password" id="perplexityApiKey" placeholder="Enter your Perplexity API key">
+                    <button type="button" id="togglePerplexityKey" class="toggle-btn">👁️</button>
+                </div>
+            </div>
+
+            <button id="saveApiKey" class="save-btn">Save</button>
+
+            <div id="apiStatus" class="status">
+                <div class="status-dot"></div>
+                <span class="status-text">Not configured</span>
+            </div>
+        </div>
+
+        <div class="instructions-section">
+            <h3>How to use:</h3>
+            <ol>
+                <li>Enter your Exa Labs API key above</li>
+                <li>Enter your Perplexity API key</li>
+                <li>Highlight any text on a webpage</li>
+                <li>Right-click and select "Fact-check with AI"</li>
+                <li>View results in the fact-check card</li>
+            </ol>
+        </div>
+
+        <div class="help-section">
+            <h3>Need help getting credentials?</h3>
+            <p>
+                <strong>Exa Labs API Key:</strong> Get one from 
+                <a href="https://dashboard.exa.ai/" target="_blank">Exa Labs Dashboard</a>
+            </p>
+            <p>
+                <strong>Perplexity API Key:</strong> Get one from 
+                <a href="https://www.perplexity.ai/account/api" target="_blank">Perplexity API Settings</a>
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>Powered by Exa Labs + Perplexity AI</p>
+        </div>
+    </div>
+
+    <script src="js/popup.js"></script>
+</body>
+</html>
+
